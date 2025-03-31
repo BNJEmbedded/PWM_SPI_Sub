@@ -1,0 +1,44 @@
+;File: pio_squarewave_out.pio
+;//Project: Pico_MRI_Test_M
+
+/* Description:
+
+    This is the pio-assembly programm that runs in an state machine, to output a squarewave with given frequency (the frequency is set to the
+    clk frequency of the statemachine). This program uses a two instructions and as every instruction uses one cycle it uses two cycles wich means
+    if the statemachine runs at clk_sys the maximum output frequency is clk_sys/2.
+    This programm is from the picos example.
+
+*/
+
+;start program squarewave out
+
+.program squarewave_out 
+
+    set pindirs, 1   ; Set pin to output
+.wrap_target
+	set pins, 1      ; Drive pin high
+	set pins, 0      ; Drive pin low
+.wrap
+
+;end programm squarewave_out
+
+;This is an initialisation function to use from the generated c-header file
+%c-sdk {
+static inline void square_wave_out_init(PIO pio, uint sm, uint offset, float pio_sm_clk_div, uint squarewave_out_pin) {
+    
+    //Get configuration
+    pio_sm_config config = squarewave_out_program_get_default_config(offset);
+    //Set clock divider
+    sm_config_set_clkdiv(&config, pio_sm_clk_div);
+    //Set pins
+    sm_config_set_set_pins(&config, squarewave_out_pin, 1);
+    //Init gpio and set pindirs
+    pio_gpio_init(pio, squarewave_out_pin);
+    pio_sm_set_consecutive_pindirs(pio, sm, squarewave_out_pin, 1, true); 
+    //Init pio-statemachine with configuration
+    pio_sm_init(pio, sm, offset, &config);
+
+}
+%}
+
+;end file pio_square_wave_out.pio

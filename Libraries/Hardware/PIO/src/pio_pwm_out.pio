@@ -1,0 +1,58 @@
+;File: pio_pwm_out.pio
+;//Project: Pico_MRI_Test_M
+
+/* Description:
+
+    This is the pio-assembly programm that runs in an state machine, to output pwm with given duty cycle and frequency.
+    This programm is from the picos example.
+
+*/
+
+;start program pwm out
+.program pwm_out 
+;number of pins used 1 - opt - option bit for side set
+.side_set 1 opt 
+;Pull duty cycle from TX-FIFO to output shift register (OSR) if data is available. 
+;If there is no data available in scratch X is copied to OSR (that means use the same duty cycle again)
+;side set pin to 0 
+pull noblock side 0
+;Copy last pulled value back to scratch x
+mov x, osr 
+;Read period from isr to scratch y
+mov y, isr
+
+;start counter loop
+counterloop:
+    ;conditional jump - if x not equal y do nothing 
+    jmp x!=y donothing
+    ;if x equal y side set pin to 1 and decrement y
+    jmp countdown side 1
+donothing:
+    nop
+countdown:
+    ;decrement y and jump back to counter_loop until y is 0, then pull new pwm value from FIFO
+    jmp y-- counterloop
+
+;end programm pwm_out
+
+;This is an initialisation function to use from the generated c-header file
+%c-sdk {
+static inline void pwm_out_init(PIO pio, uint sm, uint offset, uint pio_sm_clk_div, uint pwm_out_pin) {
+
+    //Init gpio pin
+    pio_gpio_init(pio, pwm_out_pin);
+    //Set pin direction
+    pio_sm_set_consecutive_pindirs(pio, sm, pwm_out_pin, 1, true);
+    //Get statemachine configuration
+    pio_sm_config config = pwm_out_program_get_default_config(offset);
+    //Set gpio pin to sideset pin of this statemachine configuration
+    sm_config_set_sideset_pins(&config, pwm_out_pin);
+    //Set clk divider of state-machine (could be 1 if running at full speed)
+    sm_config_set_clkdiv(&config, pio_sm_clk_div);
+    //Init pio state-machine
+    pio_sm_init(pio, sm, offset, &config);
+}
+
+%}
+
+;end file pio_pwm_out.pio
