@@ -64,6 +64,7 @@ target_include_directories(PWM_SPI_Sub PRIVATE
 target_link_libraries(PWM_SPI_Sub 
     pico_stdlib pico_util pico_time pico_rand pico_binary_info hardware_timer hardware_clocks hardware_pio hardware_uart hardware_irq hardware_spi 
     hardware_adc hardware_dma hardware_claim hardware_base hardware_pwm hardware_divider hardware_watchdog hardware_rtc hardware_pll
+    pico_multicore
 )
 
 
